@@ -22,6 +22,10 @@ public class Tower {
     private Enemy currentTarget;
     private boolean canSeeCamo; // Whether the tower can detect camo enemies
     private boolean isSelected; // Whether the tower is currently selected
+    // Buff state for temporary power-ups
+    private boolean isBuffed;
+    private double buffTimeRemaining; // seconds
+    private static final double BUFF_MULTIPLIER = 1.2; // 20% increase
 
     public Tower(double x, double y, String type, double mapWidth, double mapHeight) {
         this.x = x;
@@ -138,14 +142,24 @@ public class Tower {
 
     public boolean isReadyToShoot() {
         return lastAttackTime >= 1.0 / attackSpeed;
+        double effectiveAttackSpeed = attackSpeed;
+        if (isBuffed && towerType != null && towerType.equalsIgnoreCase("machine")) {
+            effectiveAttackSpeed *= BUFF_MULTIPLIER;
+        }
+        return lastAttackTime >= 1.0 / effectiveAttackSpeed;
     }
 
     public Projectile createProjectile(Enemy target) {
         lastAttackTime = 0;
+        double currentDamage = damage;
+        if (isBuffed && towerType != null && towerType.equalsIgnoreCase("machine")) {
+            currentDamage *= BUFF_MULTIPLIER;
+        }
         return new Projectile(
             x, y,  // start position (tower center)
             target.getX(), target.getY(),  // target position
             damage,  // projectile damage
+            currentDamage,  // projectile damage (may be buffed)
             projectileColor,  // color based on tower type
             towerSize * 0.2  // projectile size
         );
@@ -153,6 +167,14 @@ public class Tower {
     
     public void update(double deltaTime, List<Enemy> enemies) {
         lastAttackTime += deltaTime;
+        // Update buff timer
+        if (isBuffed) {
+            buffTimeRemaining -= deltaTime;
+            if (buffTimeRemaining <= 0) {
+                isBuffed = false;
+                buffTimeRemaining = 0;
+            }
+        }
     }
 
     public void render(GraphicsContext gc) {
@@ -165,9 +187,27 @@ public class Tower {
         
         // Draw all active projectiles
         projectiles.forEach(projectile -> projectile.render(gc));
+
+        // Draw buff indicator (gold halo) when buffed
+        if (isBuffed) {
+            gc.setStroke(javafx.scene.paint.Color.GOLD);
+            gc.setLineWidth(3);
+            gc.strokeOval(x - towerSize/2 - 4, y - towerSize/2 - 4, towerSize + 8, towerSize + 8);
+        }
         
         // Draw tower sprite
         gc.drawImage(sprite, x - towerSize / 2, y - towerSize / 2, towerSize, towerSize);
+    }
+
+    /**
+     * Apply a buff to this tower (only affects machine towers).
+     * duration: seconds
+     */
+    public void applyBuff(double duration) {
+        if (towerType != null && towerType.equalsIgnoreCase("machine")) {
+            isBuffed = true;
+            buffTimeRemaining = Math.max(buffTimeRemaining, duration);
+        }
     }
     
     public void setSelected(boolean selected) {
@@ -188,4 +228,5 @@ public class Tower {
     public void checkCollisions(List<Enemy> enemies) {
         // Implement projectile collision if needed
     }
+
 }
