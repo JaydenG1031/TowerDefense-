@@ -41,6 +41,11 @@ public class GameManager {
     private static final int INITIAL_ENEMIES_PER_WAVE = 5; // Start with 5 enemies in wave 1
     private static final int ENEMIES_INCREASE_PER_WAVE = 3; // Add 3 more enemies each wave
     private static final int WAVE_BREAK_TIME = 300; // Time between waves (in frames)
+    private static final double BUFF_DURATION = 7.0; // seconds to buff machine towers
+    // Track whether the special power-up enemy has been spawned this wave
+    private boolean powerUpSpawnedThisWave = false;
+    // Global buff timer for UI display (seconds remaining)
+    private double globalBuffTimeRemaining = 0.0;
 
     public GameManager(Canvas gameCanvas, String playerName) {
         this.gameCanvas = gameCanvas;
@@ -76,6 +81,7 @@ public class GameManager {
         totalEnemiesSpawned = 0;
         waveInProgress = true;
         spawnCounter = 0;
+        powerUpSpawnedThisWave = false;
     }
 
     private void initializePath() {
@@ -103,6 +109,11 @@ public class GameManager {
 
     private void update(double deltaTime) {
         if (gameOver) return;
+        
+        // Update global buff timer
+        if (globalBuffTimeRemaining > 0) {
+            globalBuffTimeRemaining = Math.max(0.0, globalBuffTimeRemaining - deltaTime);
+        }
 
         // Handle wave progression
         if (waveInProgress) {
@@ -138,6 +149,14 @@ public class GameManager {
                     endGame();
                 }
             } else if (enemy.isDead()) {
+                // If this was a power-up enemy, apply buff to all machine towers
+                if (enemy.isPowerUp()) {
+                    for (Tower tower : towers) {
+                        tower.applyBuff(BUFF_DURATION);
+                    }
+                    // start global buff timer for UI
+                    globalBuffTimeRemaining = BUFF_DURATION;
+                }
                 money += enemy.getReward();
                 score += enemy.getReward();
                 enemyIterator.remove();
@@ -231,6 +250,16 @@ public class GameManager {
                        ((WAVE_BREAK_TIME - spawnCounter) / 60 + 1) + " seconds", 10, 100);
         } else {
             gc.fillText("Enemies: " + enemies.size() + "/" + enemiesPerWave, 10, 100);
+        }
+        // Global buff UI indicator (shows remaining seconds)
+        if (globalBuffTimeRemaining > 0) {
+            gc.setFill(Color.GOLD);
+            try {
+                gc.fillText("Machine towers buffed! " + String.format("%.1f", globalBuffTimeRemaining) + "s", 10, 120);
+            } catch (Exception e) {
+                // Fallback if String.format fails
+                gc.fillText("Machine towers buffed! " + (int)Math.ceil(globalBuffTimeRemaining) + "s", 10, 120);
+            }
         }
     }
 
@@ -373,6 +402,15 @@ public class GameManager {
                 healthScaling *= 3.0; // Boss enemies have much more health
                 rewardScaling *= 3; // and give much more reward
             }
+
+            // Only spawn the special power-up enemy in specific waves (once per those waves)
+            if ((currentWave == 13 || currentWave == 42) && !powerUpSpawnedThisWave) {
+                enemy.setPowerUp(true);
+                // Power-up enemies are weaker but grant more reward
+                healthScaling *= 0.7;
+                rewardScaling *= 2;
+                powerUpSpawnedThisWave = true;
+            }
             
             // Update enemy properties with the modified values
             enemy.setHealth(healthScaling);
@@ -429,3 +467,4 @@ public class GameManager {
         return currentWave;
     }
 }
+
