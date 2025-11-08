@@ -18,6 +18,7 @@ public class Enemy {
     private boolean isArmored; // Takes reduced damage
     private boolean isCamo; // Some towers might not see it
     private boolean isRegenerating; // Heals over time
+    private boolean isPowerUp; // Gives buff to machine towers when defeated
     private static final double ENEMY_SIZE_RATIO = 0.03; // Enemy size as percentage of map height
     private static final double REGEN_RATE = 5.0; // Health regenerated per second
     private static final double ARMOR_DAMAGE_REDUCTION = 0.5; // Armored enemies take 50% less damage
@@ -36,6 +37,7 @@ public class Enemy {
         this.isArmored = false;
         this.isCamo = false;
         this.isRegenerating = false;
+        this.isPowerUp = false;
         
         if (!path.isEmpty()) {
             PathPoint start = path.get(0);
@@ -77,6 +79,18 @@ public class Enemy {
         }
     }
 
+    public void setPowerUp(boolean powerUp) {
+        this.isPowerUp = powerUp;
+        if (powerUp) {
+            this.color = javafx.scene.paint.Color.GOLD;
+            this.type = this.type.equals("NORMAL") ? "POWER-UP" : this.type;
+        }
+    }
+
+    public boolean isPowerUp() {
+        return isPowerUp;
+    }
+
     public void update(double deltaTime) {
         if (isDead || currentPathIndex >= path.size() - 1) return;
         
@@ -111,6 +125,19 @@ public class Enemy {
         // Draw the enemy as a colored circle
         gc.setFill(color);
         gc.fillOval(x - enemySize / 2, y - enemySize / 2, enemySize, enemySize);
+
+        // Highlight power-up enemies with a gold star outline
+        if (isPowerUp) {
+            gc.setStroke(javafx.scene.paint.Color.GOLD);
+            gc.setLineWidth(2);
+            double s = enemySize * 0.6;
+            // simple diamond/star-like marker
+            gc.strokePolygon(
+                new double[]{x, x + s/2, x, x - s/2},
+                new double[]{y - s/2, y, y + s/2, y},
+                4
+            );
+        }
         
         // Draw patterns for special types
         if (isArmored) {
@@ -160,4 +187,5 @@ public class Enemy {
     public int getReward() { return reward; }
     public boolean hasReachedEnd() { return currentPathIndex >= path.size() - 1; }
     public double getSize() { return enemySize; }
+
 }
