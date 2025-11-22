@@ -1,8 +1,9 @@
 package com.example.btd.ui;
 
-import javafx.scene.layout.Pane;
-import javafx.scene.canvas.Canvas;
 import com.example.btd.game.GameManager;
+
+import javafx.scene.canvas.Canvas;
+import javafx.scene.layout.Pane;
 
 public class GameScene extends Pane {
     private Canvas gameCanvas;
@@ -34,124 +35,8 @@ public class GameScene extends Pane {
         setupGameOverChecker();
     }
 
-    private void showRefundMessage(double x, double y) {
-        // Create floating text message
-        javafx.scene.text.Text refundText = new javafx.scene.text.Text("Tower Sold! (50% refunded)");
-        refundText.setStyle("-fx-fill: green; -fx-font-size: 16; -fx-font-weight: bold;");
-        refundText.setX(x);
-        refundText.setY(y);
+    // ... other methods unchanged ...
 
-        // Add to scene
-        getChildren().add(refundText);
-
-        // Create fade out animation
-        javafx.animation.FadeTransition fadeOut = new javafx.animation.FadeTransition(
-            javafx.util.Duration.seconds(1.5), refundText
-        );
-        fadeOut.setFromValue(1.0);
-        fadeOut.setToValue(0.0);
-        fadeOut.setOnFinished(e -> getChildren().remove(refundText));
-        
-        // Create float up animation
-        javafx.animation.TranslateTransition floatUp = new javafx.animation.TranslateTransition(
-            javafx.util.Duration.seconds(1.5), refundText
-        );
-        floatUp.setByY(-30);
-
-        // Play animations
-        fadeOut.play();
-        floatUp.play();
-    }
-
-    private void setupGameOverChecker() {
-        gameOverChecker = new javafx.animation.AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                if (gameManager.isGameOver()) {
-                    showGameOverScreen();
-                    gameOverChecker.stop();
-                }
-            }
-        };
-        gameOverChecker.start();
-    }
-
-    private void showGameOverScreen() {
-        // Create a semi-transparent overlay
-        javafx.scene.layout.VBox gameOverPane = new javafx.scene.layout.VBox(20);
-        gameOverPane.setStyle("-fx-background-color: rgba(0, 0, 0, 0.8); -fx-padding: 20;");
-        gameOverPane.setAlignment(javafx.geometry.Pos.CENTER);
-        gameOverPane.setPrefSize(getWidth(), getHeight());
-
-        // Game Over text
-        javafx.scene.text.Text gameOverText = new javafx.scene.text.Text("Game Over");
-        gameOverText.setStyle("-fx-fill: white; -fx-font-size: 48; -fx-font-weight: bold;");
-
-        // Score text
-        javafx.scene.text.Text scoreText = new javafx.scene.text.Text(
-            String.format("Score: %d", gameManager.getScore())
-        );
-        scoreText.setStyle("-fx-fill: white; -fx-font-size: 24;");
-
-        // Create buttons
-        javafx.scene.layout.HBox buttons = new javafx.scene.layout.HBox(20);
-        buttons.setAlignment(javafx.geometry.Pos.CENTER);
-
-        javafx.scene.control.Button restartButton = new javafx.scene.control.Button("Play Again");
-        restartButton.setStyle("-fx-font-size: 18; -fx-background-color: #4CAF50; -fx-text-fill: white;");
-        restartButton.setOnAction(e -> restartGame());
-
-        javafx.scene.control.Button leaderboardButton = new javafx.scene.control.Button("View Leaderboard");
-        leaderboardButton.setStyle("-fx-font-size: 18; -fx-background-color: #2196F3; -fx-text-fill: white;");
-        leaderboardButton.setOnAction(e -> showLeaderboard());
-
-        buttons.getChildren().addAll(restartButton, leaderboardButton);
-
-        gameOverPane.getChildren().addAll(gameOverText, scoreText, buttons);
-        getChildren().add(gameOverPane);
-    }
-
-    private void restartGame() {
-        // Get the current stage
-        javafx.stage.Stage stage = (javafx.stage.Stage) getScene().getWindow();
-        
-        // Create name input dialog for new game
-        javafx.scene.control.TextInputDialog nameDialog = new javafx.scene.control.TextInputDialog(gameManager.getPlayerName());
-        nameDialog.setTitle("New Game");
-        nameDialog.setHeaderText("Enter Your Name");
-        nameDialog.setContentText("Please enter your name:");
-        nameDialog.getDialogPane().setStyle("-fx-background-color: #2c3e50;");
-        
-        nameDialog.showAndWait().ifPresent(playerName -> {
-            javafx.geometry.Rectangle2D screenBounds = javafx.stage.Screen.getPrimary().getVisualBounds();
-            double newGameAreaWidth = screenBounds.getWidth() * 0.8;
-            double newGameAreaHeight = screenBounds.getHeight();
-            double newPanelWidth = screenBounds.getWidth() * 0.2;
-            
-            GameScene newGameScene = new GameScene(newGameAreaWidth, newGameAreaHeight, newPanelWidth, playerName);
-            stage.getScene().setRoot(newGameScene);
-        });
-    }
-
-    private void setupGameUI(double panelWidth) {
-        // Set up UI elements like score display, tower selection, etc.
-        TowerSelectionPanel towerPanel = new TowerSelectionPanel(gameManager);
-        // Place at right edge of game area
-        towerPanel.setLayoutX(gameAreaWidth);
-        towerPanel.setLayoutY(0);
-
-        // Create leaderboard button
-        javafx.scene.control.Button leaderboardButton = new javafx.scene.control.Button("Leaderboard");
-        leaderboardButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;");
-        leaderboardButton.setLayoutX(10);
-        leaderboardButton.setLayoutY(10);
-        leaderboardButton.setOnAction(e -> showLeaderboard());
-
-        getChildren().addAll(towerPanel, leaderboardButton);
-        towerPanel.toFront();
-        leaderboardButton.toFront();
-    }
-    
     private void showLeaderboard() {
         // Create a new stage for the leaderboard
         javafx.stage.Stage leaderboardStage = new javafx.stage.Stage();
@@ -184,8 +69,19 @@ public class GameScene extends Pane {
         // Add close button
         javafx.scene.control.Button closeButton = new javafx.scene.control.Button("Close");
         closeButton.setOnAction(e -> leaderboardStage.close());
+
+        // Add a Back to Main Menu button so players can return to the start menu
+        javafx.scene.control.Button backToMenuButton = new javafx.scene.control.Button("Back to Main Menu");
+        backToMenuButton.setStyle("-fx-background-color: #6a1b9a; -fx-text-fill: white;");
+        backToMenuButton.setOnAction(e -> {
+            // Replace the current scene root with the StartMenu
+            javafx.stage.Stage mainStage = (javafx.stage.Stage) getScene().getWindow();
+            com.example.btd.ui.StartMenu startMenu = new com.example.btd.ui.StartMenu(mainStage);
+            mainStage.getScene().setRoot(startMenu);
+            leaderboardStage.close();
+        });
         
-        leaderboardContent.getChildren().addAll(title, scoresList, closeButton);
+    leaderboardContent.getChildren().addAll(title, scoresList, new javafx.scene.layout.HBox(10, closeButton, backToMenuButton));
         leaderboardContent.setAlignment(javafx.geometry.Pos.CENTER);
         
         // Set up the scene
