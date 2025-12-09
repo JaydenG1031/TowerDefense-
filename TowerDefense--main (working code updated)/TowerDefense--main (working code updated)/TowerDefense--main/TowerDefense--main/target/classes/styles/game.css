@@ -1,0 +1,45 @@
+.root {
+    -fx-font-family: 'Arial';
+    font-family: 'Arial', sans-serif;
+    -fx-font-size: 14px;
+    font-size: 14px;
+}
+
+.button {
+    -fx-background-color: #4a90e2;
+    background-color: #4a90e2;
+    -fx-text-fill: white;
+    color: white;
+    -fx-padding: 10px;
+    padding: 10px;
+    -fx-border-radius: 5px;
+    border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 1);
+}
+
+.button:hover {
+    -fx-background-color: #357abd;
+    background-color: #357abd;
+}
+
+.button:pressed {
+    -fx-background-color: #2a5d94;
+    background-color: #2a5d94;
+}
+
+.button:disabled {
+    -fx-background-color: #cccccc;
+    background-color: #cccccc;
+}
+
+Text {
+    -fx-fill: white;
+    fill: white;
+}
+
+HBox {
+    -fx-spacing: 10;
+    -fx-padding: 5;
+    padding: 5px;
+}
